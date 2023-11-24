@@ -1,0 +1,182 @@
+<!-- index.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Office API</title>
+</head>
+<body>
+
+<h1>Office List</h1>
+
+<div id="office-list"></div>
+
+<h2>Create Office</h2>
+<form id="create-form">
+    <label for="name">Name:</label>
+    <input type="text" id="name" required>
+
+    <label for="location">Location:</label>
+    <input type="text" id="location" required>
+
+    <label for="capacity">Capacity:</label>
+    <input type="number" id="capacity" required>
+
+    <label for="description">Description:</label>
+    <textarea id="description"></textarea>
+
+    <button type="submit">Create Office</button>
+</form>
+
+<h2>Update Office</h2>
+<form id="update-form">
+    <label for="update-id">Office ID to Update:</label>
+    <input type="number" id="update-id" required>
+
+    <label for="update-name">New Name:</label>
+    <input type="text" id="update-name">
+
+    <label for="update-location">New Location:</label>
+    <input type="text" id="update-location">
+
+    <label for="update-capacity">New Capacity:</label>
+    <input type="number" id="update-capacity">
+
+    <label for="update-description">New Description:</label>
+    <textarea id="update-description"></textarea>
+
+    <button type="submit">Update Office</button>
+</form>
+
+<h2>Delete Office</h2>
+<form id="delete-form">
+    <label for="delete-id">Office ID to Delete:</label>
+    <input type="number" id="delete-id" required>
+
+    <button type="submit">Delete Office</button>
+</form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Fetch data from the API and display it
+        fetchAndDisplayData();
+
+        // Add event listeners for form submissions
+        document.getElementById('create-form').addEventListener('submit', function (event) {
+            event.preventDefault();
+            createOffice();
+        });
+
+        document.getElementById('update-form').addEventListener('submit', function (event) {
+            event.preventDefault();
+            updateOffice();
+        });
+
+        document.getElementById('delete-form').addEventListener('submit', function (event) {
+            event.preventDefault();
+            deleteOffice();
+        });
+    });
+
+    function fetchAndDisplayData() {
+    fetch('http://127.0.0.1:8000/api/offices/')
+        .then(response => response.json())
+        .then(data => {
+            // Display the fetched data on the webpage
+            const officeListDiv = document.getElementById('office-list');
+
+            if (data.length === 0) {
+                officeListDiv.innerHTML = '<p>No offices found.</p>';
+            } else {
+                const officeList = document.createElement('ul');
+                data.forEach(office => {
+                    const listItem = document.createElement('li');
+                    const imagePath = `http://127.0.0.1:8000/${office.image}`;
+                    listItem.innerHTML = `
+                        <h3>${office.name}</h3>
+                        <p>${office.location} - Capacity: ${office.capacity}</p>
+                        <p>${office.description}</p>
+                        <img src="office_images/logo.png" alt="mmmm Image" style="max-width: 300px; max-height: 300px;">
+`;
+                    officeList.appendChild(listItem);
+                });
+                officeListDiv.innerHTML = '';
+                officeListDiv.appendChild(officeList);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching data:', error);
+            const officeListDiv = document.getElementById('office-list');
+            officeListDiv.innerHTML = '<p>Error fetching data. Please try again later.</p>';
+        });
+}
+
+// Call the fetchAndDisplayData function when the DOM is ready
+document.addEventListener('DOMContentLoaded', fetchAndDisplayData);
+
+
+    
+    function createOffice() {
+        const name = document.getElementById('name').value;
+        const location = document.getElementById('location').value;
+        const capacity = document.getElementById('capacity').value;
+        const description = document.getElementById('description').value;
+        fetch('http://127.0.0.1:8000/api/offices/create/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name, location, capacity, description }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Office created:', data);
+            // Fetch and display updated data
+            fetchAndDisplayData();
+        })
+        .catch(error => console.error('Error creating office:', error));
+    }
+
+    function updateOffice() {
+        const id = document.getElementById('update-id').value;
+        const name = document.getElementById('update-name').value;
+        const location = document.getElementById('update-location').value;
+        const capacity = document.getElementById('update-capacity').value;
+        const description = document.getElementById('update-description').value;
+
+        fetch(`http://127.0.0.1:8000/api/offices/update/${id}/`, {
+            method: 'PATCH', // Use 'PATCH' for partial updates, 'PUT' for full updates
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name, location, capacity, description }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Office updated:', data);
+            // Fetch and display updated data
+            fetchAndDisplayData();
+        })
+        .catch(error => console.error('Error updating office:', error));
+    }
+
+    function deleteOffice() {
+        const id = document.getElementById('delete-id').value;
+
+        fetch(`http://127.0.0.1:8000/api/offices/delete/${id}/`, {
+            method: 'DELETE',
+        })
+        .then(response => response.text())
+        .then(data => {
+            console.log('Office deleted:', data);
+            // Fetch and display updated data
+            fetchAndDisplayData();
+        })
+        .catch(error => console.error('Error deleting office:', error));
+    }
+</script>
+
+</body>
+</html>
